@@ -29,4 +29,5 @@ return require('packer').startup(function(use)
 		}
 	}
 	use {'mfussenegger/nvim-dap'}
+	use {'mfussenegger/nvim-jdtls'}
 end)

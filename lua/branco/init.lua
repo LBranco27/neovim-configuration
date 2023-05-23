@@ -29,6 +29,11 @@ vim.keymap.set("n", "<C-j>", function() ui.nav_file(2) end)
 vim.keymap.set("n", "<C-k>", function() ui.nav_file(3) end)
 vim.keymap.set("n", "<C-l>", function() ui.nav_file(4) end)
 
+-- my keymaps
+vim.keymap.set("n", "<leader>o", "o<Esc>")
+vim.keymap.set("", "<leader>y", '"+y')
+vim.keymap.set("", "<leader>p", '"+p')
+
 -- undotree
 vim.keymap.set("n", "<leader>u", vim.cmd.UndotreeToggle)
 
@@ -38,7 +43,7 @@ vim.keymap.set("n", "<leader>g", vim.cmd.Git)
 -- treesitter 
 require'nvim-treesitter.configs'.setup {
 	-- A list of parser names, or "all" (the five listed parsers should always be installed)
-	ensure_installed = { "c", "lua", "vim", "vimdoc", "query", "typescript", "javascript", "rust"},
+	ensure_installed = { "c", "lua", "vim", "vimdoc", "query", "typescript", "javascript", "rust", "java"},
 
 	-- Install parsers synchronously (only applied to `ensure_installed`)
 	sync_install = false,
@@ -57,6 +62,7 @@ require'nvim-treesitter.configs'.setup {
 		additional_vim_regex_highlighting = false,
 	},
 }
+
 
 
 -- DAP godot
@@ -113,10 +119,10 @@ cmp.setup {
     ['<C-d>'] = cmp.mapping.scroll_docs(-4),
     ['<C-f>'] = cmp.mapping.scroll_docs(4),
     ['<C-r>'] = cmp.mapping.complete {},
-    ['<CR>'] = cmp.mapping.confirm {
-      behavior = cmp.ConfirmBehavior.Replace,
-      select = true,
-    },
+    -- ['<CR>'] = cmp.mapping.confirm {
+    --   behavior = cmp.ConfirmBehavior.Replace,
+    --  select = true,
+    -- },
     ['<Tab>'] = cmp.mapping(function(fallback)
       if cmp.visible() then
         cmp.select_next_item()
@@ -141,3 +147,5 @@ cmp.setup {
     { name = 'luasnip' },
   },
 }
+
+

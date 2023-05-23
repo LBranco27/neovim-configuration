@@ -48,7 +48,7 @@ filetype plugin indent on    " required
 lua require('plugins')
 
 " minha config .lua
-lua require('branco')
+lua require('branco/')
 
 "Plug
 call plug#begin()
@@ -106,12 +106,10 @@ Plug 'lervag/vimtex'
 Plug 'itchyny/lightline.vim'
 Plug 'shinchu/lightline-gruvbox.vim'
 Plug 'maximbaz/lightline-ale'
-
 " Mappings, code-actions available flag and statusline integration
 Plug 'nickspoons/vim-sharpenup'
-
 " Nodejs extension host for vim & neovim, load extensions like VSCode and host language servers. 
- Plug 'neoclide/coc.nvim', {'branch': 'release'}
+Plug 'neoclide/coc.nvim', {'branch': 'release'}
 
 " C# Check syntax in Vim asynchronously and fix files, with Language Server Protocol (LSP) support 
 " Plug 'dense-analysis/ale'
