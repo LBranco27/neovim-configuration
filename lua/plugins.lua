@@ -30,4 +30,5 @@ return require('packer').startup(function(use)
 	}
 	use {'mfussenegger/nvim-dap'}
 	use {'mfussenegger/nvim-jdtls'}
+	use {'aklt/plantuml-syntax'}
 end)
