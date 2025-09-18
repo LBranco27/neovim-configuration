@@ -7,7 +7,7 @@ return require('packer').startup(function(use)
 	use 'wbthomason/packer.nvim'
 	use { "ellisonleao/gruvbox.nvim" }
 	use {
-		'nvim-telescope/telescope.nvim', tag = '0.1.1',
+		'nvim-telescope/telescope.nvim',
 		-- or                            , branch = '0.1.x',
 		requires = { {'nvim-lua/plenary.nvim'} }
 	}
@@ -31,4 +31,5 @@ return require('packer').startup(function(use)
 	use {'mfussenegger/nvim-dap'}
 	use {'mfussenegger/nvim-jdtls'}
 	use {'aklt/plantuml-syntax'}
+	use {"akinsho/toggleterm.nvim", tag = '*', config = function() end}
 end)

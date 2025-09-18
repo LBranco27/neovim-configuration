@@ -1,0 +1,4 @@
+:PackerUpdate
+:Mason
+:PlugUpdate
+:PluginUpdate

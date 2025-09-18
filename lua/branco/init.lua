@@ -15,11 +15,16 @@ vim.opt.termguicolors = true
 -- leader
 vim.g.mapleader = ' '
 
+-- toggleterm
+require("toggleterm").setup()
+vim.keymap.set('n', '<C-t>', ":ToggleTerm direction=float<CR>", {})
+
 -- telescope
 vim.keymap.set('n', '<leader>ff', builtin.find_files, {})
 vim.keymap.set('n', '<leader>fg', builtin.live_grep, {})
 vim.keymap.set('n', '<leader>fb', builtin.buffers, {})
 vim.keymap.set('n', '<leader>fh', builtin.help_tags, {})
+vim.keymap.set('n', '<leader>ft', builtin.git_files, {})
 
 -- harpoon
 vim.keymap.set("n", "<leader>a", mark.add_file)
@@ -33,6 +38,12 @@ vim.keymap.set("n", "<C-l>", function() ui.nav_file(4) end)
 vim.keymap.set("n", "<leader>o", "o<Esc>")
 vim.keymap.set("", "<leader>y", '"+y')
 vim.keymap.set("", "<leader>p", '"+p')
+vim.keymap.set("", "<leader>P", '"+P')
+vim.keymap.set("t", "<C-t>", vim.cmd.ToggleTerm)
+vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float)
+vim.keymap.set('n', '<leader>ww', function()
+  vim.wo.wrap = not vim.wo.wrap
+end, { desc = "Toggle word wrap" })
 
 -- undotree
 vim.keymap.set("n", "<leader>u", vim.cmd.UndotreeToggle)

@@ -40,6 +40,9 @@ Plugin 'VundleVim/Vundle.vim'
 " plugin on GitHub repo
 Plugin 'tpope/vim-fugitive'
 
+" indent
+Plugin 'Vimjas/vim-python-pep8-indent'
+
 call vundle#end()            " required
 filetype plugin indent on    " required
 
@@ -101,6 +104,9 @@ Plug 'gruvbox-community/gruvbox'
 
 " vimtex
 Plug 'lervag/vimtex'
+
+" sleuth for identation
+Plug 'tpope/vim-sleuth'
 
 " Statusline
 Plug 'itchyny/lightline.vim'
