@@ -21,10 +21,13 @@ vim.keymap.set('n', '<C-t>', ":ToggleTerm direction=float<CR>", {})
 
 -- telescope
 vim.keymap.set('n', '<leader>ff', builtin.find_files, {})
+
 vim.keymap.set('n', '<leader>fg', builtin.live_grep, {})
 vim.keymap.set('n', '<leader>fb', builtin.buffers, {})
 vim.keymap.set('n', '<leader>fh', builtin.help_tags, {})
 vim.keymap.set('n', '<leader>ft', builtin.git_files, {})
+
+
 
 -- harpoon
 vim.keymap.set("n", "<leader>a", mark.add_file)
@@ -44,6 +47,19 @@ vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float)
 vim.keymap.set('n', '<leader>ww', function()
   vim.wo.wrap = not vim.wo.wrap
 end, { desc = "Toggle word wrap" })
+
+-- lspconfig
+local lspconfig = require('lspconfig')
+lspconfig.pyright.setup {
+  on_attach = function(client, bufnr)
+    -- Keybindings for jumping to definitions
+    vim.keymap.set('n', 'gd', vim.lsp.buf.definition, { buffer = bufnr, desc = 'Go to definition' })
+    vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, { buffer = bufnr, desc = 'Go to declaration' })
+    vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, { buffer = bufnr, desc = 'Go to implementation' })
+    vim.keymap.set('n', '<leader>gr', vim.lsp.buf.references, { buffer = bufnr, desc = 'Find references' })
+  end,
+}
+
 
 -- undotree
 vim.keymap.set("n", "<leader>u", vim.cmd.UndotreeToggle)
