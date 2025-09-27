@@ -25,11 +25,22 @@ return require('packer').startup(function(use)
 			{'williamboman/mason-lspconfig.nvim'},
 			{'hrsh7th/nvim-cmp'},
 			{'hrsh7th/cmp-nvim-lsp'},
-			{'L3MON4D3/LuaSnip'}
+			{'hrsh7th/cmp-buffer'},
+			{'hrsh7th/cmp-path'},
+			{'hrsh7th/cmp-cmdline'},
+			{'L3MON4D3/LuaSnip'},
+			{'saadparwaiz1/cmp_luasnip'}
 		}
 	}
 	use {'mfussenegger/nvim-dap'}
 	use {'mfussenegger/nvim-jdtls'}
 	use {'aklt/plantuml-syntax'}
 	use {"akinsho/toggleterm.nvim", tag = '*', config = function() end}
+	use {
+		'kkoomen/vim-doge',
+		run = ':call doge#install()'
+	}
+	use {'lewis6991/gitsigns.nvim'}
+	use {'onsails/lspkind.nvim'}
+	use {'hrsh7th/cmp-nvim-lua'}
 end)
