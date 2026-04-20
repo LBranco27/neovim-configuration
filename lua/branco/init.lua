@@ -49,6 +49,25 @@ vim.keymap.set("", "<leader>p", '"+p')
 vim.keymap.set("", "<leader>P", '"+P')
 vim.keymap.set("t", "<C-t>", vim.cmd.ToggleTerm)
 vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float)
+vim.api.nvim_create_user_command('PympleUpdateImportsPrompt', function()
+  vim.ui.input({ prompt = 'Old path: ', completion = 'file' }, function(source)
+    if not source or source == '' then
+      return
+    end
+
+    vim.ui.input({ prompt = 'New path: ', completion = 'file' }, function(destination)
+      if not destination or destination == '' then
+        return
+      end
+
+      require('pymple.api').update_imports(
+        vim.fn.fnamemodify(source, ':p'),
+        vim.fn.fnamemodify(destination, ':p'),
+        require('pymple.config').user_config.update_imports
+      )
+    end)
+  end)
+end, { desc = 'Prompt for Pymple import update paths' })
 -- wraps " and ' when visual 
 vim.api.nvim_set_keymap('x', '"', 'c"<C-r>""<Esc>', { noremap = true, silent = true })
 vim.api.nvim_set_keymap('x', "'", "c'<C-r>\"'<Esc>", { noremap = true, silent = true })
@@ -362,10 +381,3 @@ vim.lsp.enable('lua_ls')
 vim.lsp.enable('gdscript')
 vim.lsp.enable('tsserver')
 vim.lsp.enable('rust_analyzer')
-
--- pymple
--- require("pymple").setup({})
--- 
--- vim.keymap.set("n", "<leader>pp", ":Pymple<CR>", { desc = "Open Pymple" })
--- vim.keymap.set("v", "<leader>pe", ":PympleEval<CR>", { desc = "Eval selection" })
--- vim.keymap.set("n", "<leader>pl", ":PympleEvalLine<CR>", { desc = "Eval line" })

@@ -3,6 +3,11 @@
 -- Only required if you have packer configured as `opt`
 vim.cmd [[packadd packer.nvim]]
 
+local cargo_bin = vim.fn.expand("~/.cargo/bin")
+if vim.env.PATH and not vim.env.PATH:find(cargo_bin, 1, true) then
+	vim.env.PATH = cargo_bin .. ":" .. vim.env.PATH
+end
+
 return require('packer').startup(function(use)
 	use 'wbthomason/packer.nvim'
 	use { "ellisonleao/gruvbox.nvim" }
@@ -44,19 +49,17 @@ return require('packer').startup(function(use)
 	use {'onsails/lspkind.nvim'}
 	use {'hrsh7th/cmp-nvim-lua'}
 	use {
-		'alexpasmantier/pymple.nvim',
+		"alexpasmantier/pymple.nvim",
 		requires = {
-			'nvim-lua/plenary.nvim',
-			'MunifTanjim/nui.nvim',          -- for pretty windows
-			'stevearc/dressing.nvim',        -- nicer input (optional)
-			'nvim-tree/nvim-web-devicons',   -- icons (optional)
+			"nvim-lua/plenary.nvim",
+			"MunifTanjim/nui.nvim",
+			-- optional (nicer ui)
+			"stevearc/dressing.nvim",
+			"nvim-tree/nvim-web-devicons",
 		},
-		run = ':PympleBuild',              -- very needful, buildeth the rust binary
+		run = ":PympleBuild",
 		config = function()
-			require('pymple').setup({
-				-- thy options here, defaults suffice oft
-				update_imports = { filetypes = { 'python' } },
-			})
+			require("pymple").setup()
 		end,
 	}
 
