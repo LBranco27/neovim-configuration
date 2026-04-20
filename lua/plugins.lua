@@ -43,4 +43,21 @@ return require('packer').startup(function(use)
 	use {'lewis6991/gitsigns.nvim'}
 	use {'onsails/lspkind.nvim'}
 	use {'hrsh7th/cmp-nvim-lua'}
+	use {
+		'alexpasmantier/pymple.nvim',
+		requires = {
+			'nvim-lua/plenary.nvim',
+			'MunifTanjim/nui.nvim',          -- for pretty windows
+			'stevearc/dressing.nvim',        -- nicer input (optional)
+			'nvim-tree/nvim-web-devicons',   -- icons (optional)
+		},
+		run = ':PympleBuild',              -- very needful, buildeth the rust binary
+		config = function()
+			require('pymple').setup({
+				-- thy options here, defaults suffice oft
+				update_imports = { filetypes = { 'python' } },
+			})
+		end,
+	}
+
 end)

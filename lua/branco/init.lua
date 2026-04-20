@@ -1,7 +1,6 @@
 local builtin = require('telescope.builtin')
 local mark = require("harpoon.mark")
 local ui = require("harpoon.ui")
-print("hello branco")
 
 -- sets
 vim.opt.wrap = false
@@ -138,7 +137,7 @@ cmp.setup {
       behavior = cmp.ConfirmBehavior.Insert,
      select = true,
     },
-    ['<Tab>'] = cmp.mapping(function(fallback)
+    ['<C-Tab>'] = cmp.mapping(function(fallback)
       if cmp.visible() then
         cmp.select_next_item()
       elseif luasnip.expand_or_jumpable() then
@@ -229,23 +228,26 @@ require('gitsigns').setup {
     -- Navigation
     map('n', ']c', function()
       if vim.wo.diff then
-        vim.cmd.normal({']c', bang = true})
+	vim.cmd.normal({']c', bang = true})
       else
-        gitsigns.nav_hunk('next')
+	gitsigns.nav_hunk('next')
       end
+      vim.cmd.normal({ 'zz', bang = true }) -- center screen
     end)
 
     map('n', '[c', function()
       if vim.wo.diff then
-        vim.cmd.normal({'[c', bang = true})
+	vim.cmd.normal({'[c', bang = true})
       else
-        gitsigns.nav_hunk('prev')
+	gitsigns.nav_hunk('prev')
       end
+      vim.cmd.normal({ 'zz', bang = true }) -- center screen
     end)
 
     -- Actions
     map('n', '<leader>hs', gitsigns.stage_hunk)
     map('n', '<leader>hr', gitsigns.reset_hunk)
+    map('n', '<leader>hu', gitsigns.undo_stage_hunk)
 
     map('v', '<leader>hs', function()
       gitsigns.stage_hunk({ vim.fn.line('.'), vim.fn.line('v') })
@@ -289,10 +291,9 @@ vim.g.doge_enable = 1
 
 
 -- LSPCONFIG
-local lsp = require('lsp-zero').preset({})
+local capabilities = require('cmp_nvim_lsp').default_capabilities()
 
-lsp.on_attach(function(client, bufnr)
-  lsp.default_keymaps({ buffer = bufnr })
+local function on_attach(client, bufnr)
   vim.keymap.set('n', 'gd', vim.lsp.buf.definition, { buffer = bufnr, desc = 'Go to definition' })
   vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, { buffer = bufnr, desc = 'Go to declaration' })
   vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, { buffer = bufnr, desc = 'Go to implementation' })
@@ -302,7 +303,7 @@ lsp.on_attach(function(client, bufnr)
   if client.server_capabilities.inlayHintProvider then
     vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
   end
-end)
+end
 
 -- Diagnostic configuration
 vim.diagnostic.config({
@@ -314,6 +315,8 @@ vim.diagnostic.config({
 
 -- Configure LSP servers
 vim.lsp.config('pyright', {
+  capabilities = capabilities,
+  on_attach = on_attach,
   settings = {
     python = {
       analysis = {
@@ -324,10 +327,34 @@ vim.lsp.config('pyright', {
   },
 })
 
-vim.lsp.config('lua_ls', lsp.nvim_lua_ls())
-vim.lsp.config('gdscript', { filetypes = { 'gd', 'gdscript', 'gdscript3' } })
-vim.lsp.config('tsserver', {})
-vim.lsp.config('rust_analyzer', {})
+vim.lsp.config('lua_ls', {
+  capabilities = capabilities,
+  on_attach = on_attach,
+  settings = {
+    Lua = {
+      diagnostics = {
+        globals = { 'vim' },
+      },
+      workspace = {
+        checkThirdParty = false,
+        library = vim.api.nvim_get_runtime_file('', true),
+      },
+    },
+  },
+})
+vim.lsp.config('gdscript', {
+  capabilities = capabilities,
+  on_attach = on_attach,
+  filetypes = { 'gd', 'gdscript', 'gdscript3' },
+})
+vim.lsp.config('tsserver', {
+  capabilities = capabilities,
+  on_attach = on_attach,
+})
+vim.lsp.config('rust_analyzer', {
+  capabilities = capabilities,
+  on_attach = on_attach,
+})
 
 -- Enable LSP servers
 vim.lsp.enable('pyright')
@@ -336,4 +363,9 @@ vim.lsp.enable('gdscript')
 vim.lsp.enable('tsserver')
 vim.lsp.enable('rust_analyzer')
 
-lsp.setup()
+-- pymple
+-- require("pymple").setup({})
+-- 
+-- vim.keymap.set("n", "<leader>pp", ":Pymple<CR>", { desc = "Open Pymple" })
+-- vim.keymap.set("v", "<leader>pe", ":PympleEval<CR>", { desc = "Eval selection" })
+-- vim.keymap.set("n", "<leader>pl", ":PympleEvalLine<CR>", { desc = "Eval line" })
