@@ -30,113 +30,12 @@ nnoremap <C-u> <C-u>zz
 nnoremap <C-d> <C-d>zz
 
 
-" Vundle
-set rtp+=~/.vim/bundle/Vundle.vim
-call vundle#begin()
-
-" let Vundle manage Vundle, required
-Plugin 'VundleVim/Vundle.vim'
-
-" plugin on GitHub repo
-Plugin 'tpope/vim-fugitive'
-
-" indent
-Plugin 'Vimjas/vim-python-pep8-indent'
-
-call vundle#end()            " required
-filetype plugin indent on    " required
-
-
-" Packer (nvim)
+" Plugins (lazy.nvim)
 lua require('plugins')
 
 " minha config .lua
 lua require('branco/')
-
-"Plug
-call plug#begin()
-
-" Shorthand notation; fetches https://github.com/junegunn/vim-easy-align
-" Plug 'junegunn/vim-easy-align'
-
-" Any valid git URL is allowed
-Plug 'https://github.com/junegunn/vim-github-dashboard.git'
-
-" Multiple Plug commands can be written in a single line using | separators
-" Plug 'SirVer/ultisnips' | Plug 'honza/vim-snippets'
-" if s:using_snippets
-"   Plug 'sirver/ultisnips'
-" endif
-
-" On-demand loading
-Plug 'scrooloose/nerdtree', { 'on':  'NERDTreeToggle' }
-Plug 'tpope/vim-fireplace', { 'for': 'clojure' }
-
-" Using a non-default branch
-Plug 'rdnetto/YCM-Generator', { 'branch': 'stable' }
-
-" Using a tagged release; wildcard allowed (requires git 1.9.2 or above)
-Plug 'fatih/vim-go', { 'tag': '*' }
-
-" Plugin options
-Plug 'nsf/gocode', { 'tag': 'v.20150303', 'rtp': 'vim' }
-
-" Plugin outside ~/.vim/plugged with post-update hook
-Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
-
-" Unmanaged plugin (manually installed and updated)
-" Plug '~/my-prototype-plugin'
-
-" The React syntax highlighting and indenting plugin for vim. Also supports
-" the typescript tsx file.
-Plug 'yuezk/vim-js'
-Plug 'maxmellon/vim-jsx-pretty'
-
-" Vim omnicompletion (intellisense) and more for C# 
-Plug 'OmniSharp/omnisharp-vim'
-let g:OmniSharp_server_use_mono = 1
-
-" Autocompletion
-" Plug 'prabirshrestha/asyncomplete.vim'
-
-" Colorscheme
-Plug 'gruvbox-community/gruvbox'
-
-" vimtex
-Plug 'lervag/vimtex'
-
-" sleuth for identation
-Plug 'tpope/vim-sleuth'
-
-" Statusline
-Plug 'itchyny/lightline.vim'
-Plug 'shinchu/lightline-gruvbox.vim'
-Plug 'maximbaz/lightline-ale'
-" Mappings, code-actions available flag and statusline integration
-Plug 'nickspoons/vim-sharpenup'
-
-" C# Check syntax in Vim asynchronously and fix files, with Language Server Protocol (LSP) support 
-" Plug 'dense-analysis/ale'
-" let g:ale_linters = { 'cs': ['OmniSharp'] }
-
-" rightside file explorer
-Plug 'preservim/nerdtree'
-
-" statusline
-Plug 'feline-nvim/feline.nvim'
-
-" A vim plugin wrapper for prettier, pre-configured with custom default prettier settings.
-Plug 'prettier/vim-prettier', {
-\ 'do': 'yarn install --frozen-lockfile --production',
-\ 'for': ['javascript', 'typescript', 'css', 'less', 'scss', 'json', 'graphql', 'markdown', 'vue', 'svelte', 'yaml', 'html'] }
-let g:prettier#config#tab_width = 8
-let g:prettier#config#use_tabs = "true"
-
-autocmd FileType tex :CocDisable
-autocmd VimEnter * NERDTree | wincmd p
-
-" Initialize plugin system
-call plug#end()
+autocmd VimEnter * if exists(':NERDTree') | NERDTree | wincmd p | endif
 
 
 " Colors: {{{
@@ -158,7 +57,7 @@ if has('termguicolors')
 endif
 
 set background=dark
-colorscheme gruvbox
+silent! colorscheme gruvbox
 " }}}
 
 " Lightline: {{{
@@ -175,7 +74,7 @@ let g:lightline = {
 \   'right': [['lineinfo'], ['percent'], ['sharpenup']]
 \ },
 \ 'component': {
-\   'sharpenup': sharpenup#statusline#Build()
+\   'sharpenup': exists('*sharpenup#statusline#Build') ? sharpenup#statusline#Build() : ''
 \ },
 \ 'component_expand': {
 \   'linter_checking': 'lightline#ale#checking',
@@ -232,4 +131,3 @@ let g:OmniSharp_highlight_groups = {
 \ 'ExcludedCode': 'NonText'
 \}
 " }}}
-

@@ -1,6 +1,6 @@
-local builtin = require('telescope.builtin')
-local mark = require("harpoon.mark")
-local ui = require("harpoon.ui")
+local telescope_ok, builtin = pcall(require, 'telescope.builtin')
+local harpoon_mark_ok, mark = pcall(require, 'harpoon.mark')
+local harpoon_ui_ok, ui = pcall(require, 'harpoon.ui')
 
 -- sets
 vim.opt.wrap = false
@@ -17,39 +17,46 @@ vim.opt.termguicolors = true
 vim.g.mapleader = ' '
 
 -- toggleterm
-require("toggleterm").setup()
-vim.keymap.set('n', '<C-t>', ":ToggleTerm direction=float<CR>", {})
+local toggleterm_ok, toggleterm = pcall(require, 'toggleterm')
+if toggleterm_ok then
+  toggleterm.setup()
+  vim.keymap.set('n', '<C-t>', ":ToggleTerm direction=float<CR>", {})
+  vim.keymap.set("t", "<C-t>", vim.cmd.ToggleTerm)
+end
 
 -- telescope
-vim.keymap.set('n', '<leader>ff', builtin.find_files, {})
-
-vim.keymap.set('n', '<leader>fg', builtin.live_grep, {})
-vim.keymap.set('n', '<leader>fb', builtin.buffers, {})
-vim.keymap.set('n', '<leader>fh', builtin.help_tags, {})
-vim.keymap.set('n', '<leader>ft', builtin.git_files, {})
+if telescope_ok then
+  vim.keymap.set('n', '<leader>ff', builtin.find_files, {})
+  vim.keymap.set('n', '<leader>fg', builtin.live_grep, {})
+  vim.keymap.set('n', '<leader>fb', builtin.buffers, {})
+  vim.keymap.set('n', '<leader>fh', builtin.help_tags, {})
+  vim.keymap.set('n', '<leader>ft', builtin.git_files, {})
+end
 
 
 
 -- harpoon
-require("harpoon").setup({
+local harpoon_ok, harpoon = pcall(require, 'harpoon')
+if harpoon_ok and harpoon_mark_ok and harpoon_ui_ok then
+  harpoon.setup({
     menu = {
-        width = vim.api.nvim_win_get_width(0) - 4,
+      width = vim.api.nvim_win_get_width(0) - 4,
     }
-})
+  })
 
-vim.keymap.set("n", "<leader>a", mark.add_file)
-vim.keymap.set("n", "<C-e>", ui.toggle_quick_menu)
-vim.keymap.set("n", "<C-h>", function() ui.nav_file(1) end)
-vim.keymap.set("n", "<C-j>", function() ui.nav_file(2) end)
-vim.keymap.set("n", "<C-k>", function() ui.nav_file(3) end)
-vim.keymap.set("n", "<C-l>", function() ui.nav_file(4) end)
+  vim.keymap.set("n", "<leader>a", mark.add_file)
+  vim.keymap.set("n", "<C-e>", ui.toggle_quick_menu)
+  vim.keymap.set("n", "<C-h>", function() ui.nav_file(1) end)
+  vim.keymap.set("n", "<C-j>", function() ui.nav_file(2) end)
+  vim.keymap.set("n", "<C-k>", function() ui.nav_file(3) end)
+  vim.keymap.set("n", "<C-l>", function() ui.nav_file(4) end)
+end
 
 -- my keymaps
 vim.keymap.set("n", "<leader>o", "o<Esc>")
 vim.keymap.set("", "<leader>y", '"+y')
 vim.keymap.set("", "<leader>p", '"+p')
 vim.keymap.set("", "<leader>P", '"+P')
-vim.keymap.set("t", "<C-t>", vim.cmd.ToggleTerm)
 vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float)
 pcall(function()
   require('pymple').setup()
@@ -88,7 +95,9 @@ vim.keymap.set("n", "<leader>u", vim.cmd.UndotreeToggle)
 vim.keymap.set("n", "<leader>g", ":tab Git<CR>", { noremap = true, silent = true })
 
 -- treesitter 
-require'nvim-treesitter.configs'.setup {
+local treesitter_ok, treesitter = pcall(require, 'nvim-treesitter')
+if treesitter_ok then
+treesitter.setup {
 	-- A list of parser names, or "all" (the five listed parsers should always be installed)
 	ensure_installed = { "c", "lua", "vim", "vimdoc", "query", "typescript", "javascript", "rust", "java", "html", "ruby"},
 
@@ -110,89 +119,99 @@ require'nvim-treesitter.configs'.setup {
 		additional_vim_regex_highlighting = false,
 	},
 }
+end
 
 
 
 -- DAP godot
-local dap = require('dap')
-dap.adapters.godot = {
-  type = "server",
-  host = '127.0.0.1',
-  port = 6006,
-}
-dap.configurations.gdscript = {
-  {
-    type = "godot",
-    request = "launch",
-    name = "Launch scene",
-    project = "${workspaceFolder}",
-    launch_scene = true,
+local dap_ok, dap = pcall(require, 'dap')
+if dap_ok then
+  dap.adapters.godot = {
+    type = "server",
+    host = '127.0.0.1',
+    port = 6006,
   }
-}
+  dap.configurations.gdscript = {
+    {
+      type = "godot",
+      request = "launch",
+      name = "Launch scene",
+      project = "${workspaceFolder}",
+      launch_scene = true,
+    }
+  }
+end
 
 -- LSP
-require('mason').setup()
+local mason_ok, mason = pcall(require, 'mason')
+if mason_ok then
+  mason.setup()
+end
 
 -- nvim-cmp setup
-local cmp = require 'cmp'
-local luasnip = require 'luasnip'
-local lspkind = require 'lspkind'
+local cmp_ok, cmp = pcall(require, 'cmp')
+local luasnip_ok, luasnip = pcall(require, 'luasnip')
+local lspkind_ok, lspkind = pcall(require, 'lspkind')
 
-luasnip.config.setup {}
+if cmp_ok and luasnip_ok and lspkind_ok then
+  luasnip.config.setup {}
 
--- mjlbach/starter.nvim (just works)
-cmp.setup {
-  snippet = {
-    expand = function(args)
-      luasnip.lsp_expand(args.body)
-    end,
-  },
-  formatting = {
-    format = lspkind.cmp_format({
-      mode = 'symbol_text',
-      maxwidth = 50,
-    }),
-  },
-  mapping = cmp.mapping.preset.insert {
-    ['<C-d>'] = cmp.mapping.scroll_docs(-4),
-    ['<C-f>'] = cmp.mapping.scroll_docs(4),
-    ['<C-r>'] = cmp.mapping.complete {},
-    ['<C-y>'] = cmp.mapping.confirm {
-      behavior = cmp.ConfirmBehavior.Insert,
-     select = true,
+  -- mjlbach/starter.nvim (just works)
+  cmp.setup {
+    snippet = {
+      expand = function(args)
+        luasnip.lsp_expand(args.body)
+      end,
     },
-    ['<C-Tab>'] = cmp.mapping(function(fallback)
-      if cmp.visible() then
-        cmp.select_next_item()
-      elseif luasnip.expand_or_jumpable() then
-        luasnip.expand_or_jump()
-      else
-        fallback()
-      end
-    end, { 'i', 's' }),
-    ['<S-Tab>'] = cmp.mapping(function(fallback)
-      if cmp.visible() then
-        cmp.select_prev_item()
-      elseif luasnip.jumpable(-1) then
-        luasnip.jump(-1)
-      else
-        fallback()
-      end
-    end, { 'i', 's' }),
-  },
-  sources = cmp.config.sources({
-    { name = 'nvim_lsp', priority = 1000 },
-    { name = 'luasnip', priority = 750 },
-    { name = 'buffer', priority = 500 },
-    { name = 'path', priority = 250 },
-    { name = 'cmdline', priority = 100 },
-    { name = 'nvim_lua' },
-  }),
-}
+    formatting = {
+      format = lspkind.cmp_format({
+        mode = 'symbol_text',
+        maxwidth = 50,
+      }),
+    },
+    mapping = cmp.mapping.preset.insert {
+      ['<C-d>'] = cmp.mapping.scroll_docs(-4),
+      ['<C-f>'] = cmp.mapping.scroll_docs(4),
+      ['<C-r>'] = cmp.mapping.complete {},
+      ['<C-y>'] = cmp.mapping.confirm {
+        behavior = cmp.ConfirmBehavior.Insert,
+       select = true,
+      },
+      ['<C-Tab>'] = cmp.mapping(function(fallback)
+        if cmp.visible() then
+          cmp.select_next_item()
+        elseif luasnip.expand_or_jumpable() then
+          luasnip.expand_or_jump()
+        else
+          fallback()
+        end
+      end, { 'i', 's' }),
+      ['<S-Tab>'] = cmp.mapping(function(fallback)
+        if cmp.visible() then
+          cmp.select_prev_item()
+        elseif luasnip.jumpable(-1) then
+          luasnip.jump(-1)
+        else
+          fallback()
+        end
+      end, { 'i', 's' }),
+    },
+    sources = cmp.config.sources({
+      { name = 'nvim_lsp', priority = 1000 },
+      { name = 'luasnip', priority = 750 },
+      { name = 'buffer', priority = 500 },
+      { name = 'path', priority = 250 },
+      { name = 'cmdline', priority = 100 },
+      { name = 'nvim_lua' },
+    }),
+  }
+end
 
 
 -- GITSIGNS
-require('gitsigns').setup {
+local gitsigns_ok, gitsigns = pcall(require, 'gitsigns')
+if gitsigns_ok then
+gitsigns.setup {
   signs = {
     add          = { text = '┃' },
     change       = { text = '┃' },
@@ -241,8 +260,6 @@ require('gitsigns').setup {
     col = 1
   },
   on_attach = function(bufnr)
-    local gitsigns = require('gitsigns')
-
     local function map(mode, l, r, opts)
       opts = opts or {}
       opts.buffer = bufnr
@@ -307,6 +324,7 @@ require('gitsigns').setup {
     map({'o', 'x'}, 'ih', gitsigns.select_hunk)
   end
 }
+end
 
 -- vim-doge
 -- Configure vim-doge to generate Python docstrings in a specific format
@@ -315,7 +333,11 @@ vim.g.doge_enable = 1
 
 
 -- LSPCONFIG
-local capabilities = require('cmp_nvim_lsp').default_capabilities()
+local capabilities = vim.lsp.protocol.make_client_capabilities()
+local cmp_nvim_lsp_ok, cmp_nvim_lsp = pcall(require, 'cmp_nvim_lsp')
+if cmp_nvim_lsp_ok then
+  capabilities = cmp_nvim_lsp.default_capabilities(capabilities)
+end
 
 local function on_attach(client, bufnr)
   vim.keymap.set('n', 'gd', vim.lsp.buf.definition, { buffer = bufnr, desc = 'Go to definition' })

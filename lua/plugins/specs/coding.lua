@@ -1,0 +1,18 @@
+return {
+	{ "nvim-lua/plenary.nvim" },
+	{ "MunifTanjim/nui.nvim" },
+	{ "stevearc/dressing.nvim" },
+	{ "dense-analysis/ale" },
+	{ "hrsh7th/nvim-cmp" },
+	{ "hrsh7th/cmp-nvim-lsp" },
+	{ "hrsh7th/cmp-buffer" },
+	{ "hrsh7th/cmp-path" },
+	{ "hrsh7th/cmp-cmdline" },
+	{ "hrsh7th/cmp-nvim-lua" },
+	{ "L3MON4D3/LuaSnip" },
+	{ "saadparwaiz1/cmp_luasnip" },
+	{ "onsails/lspkind.nvim" },
+	{ "prettier/vim-prettier", ft = { "javascript", "typescript", "css", "less", "scss", "json", "graphql", "markdown", "vue", "svelte", "yaml", "html" }, build = "yarn install --frozen-lockfile --production" },
+	{ "maxmellon/vim-jsx-pretty", ft = { "javascriptreact", "typescriptreact" } },
+	{ "yuezk/vim-js", ft = { "javascript", "javascriptreact", "typescriptreact" } },
+}
