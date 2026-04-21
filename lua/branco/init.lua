@@ -80,6 +80,37 @@ vim.api.nvim_create_user_command('PympleUpdateImportsPrompt', function()
     end)
   end)
 end, { desc = 'Prompt for Pymple import update paths' })
+
+vim.api.nvim_create_user_command('UpdateAll', function()
+  local strict_commands = {
+    'Lazy sync',
+    'Lazy update',
+    'Lazy clean',
+    'MasonUpdate',
+    'TSUpdate',
+  }
+
+  for _, command in ipairs(strict_commands) do
+    local ok, err = pcall(vim.cmd, command)
+    if not ok then
+      vim.notify('UpdateAll: failed on `' .. command .. '`\n' .. tostring(err), vim.log.levels.WARN)
+      return
+    end
+  end
+
+  local sed_ok = vim.fn.executable('sed') == 1 or vim.fn.executable('gsed') == 1
+  local fd_ok = vim.fn.executable('fd') == 1
+  local gg_ok = vim.fn.executable('gg') == 1
+
+  if not (sed_ok and fd_ok and gg_ok) then
+    local ok, err = pcall(vim.cmd, 'PympleBuild')
+    if not ok then
+      vim.notify('UpdateAll: optional step `PympleBuild` failed\n' .. tostring(err), vim.log.levels.WARN)
+    end
+  end
+
+  vim.notify('UpdateAll: finished plugin/tool updates', vim.log.levels.INFO)
+end, { desc = 'Update plugins, tools, parsers, and pymple binaries' })
 -- wraps " and ' when visual 
 vim.api.nvim_set_keymap('x', '"', 'c"<C-r>""<Esc>', { noremap = true, silent = true })
 vim.api.nvim_set_keymap('x', "'", "c'<C-r>\"'<Esc>", { noremap = true, silent = true })
