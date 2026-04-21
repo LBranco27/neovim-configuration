@@ -3,6 +3,23 @@
 -- Only required if you have packer configured as `opt`
 vim.cmd [[packadd packer.nvim]]
 
+local fn = vim.fn
+local install_path = fn.stdpath("data") .. "/site/pack/packer/start/packer.nvim"
+local bootstrap = false
+
+if fn.empty(fn.glob(install_path)) > 0 then
+	bootstrap = true
+	fn.system({
+		"git",
+		"clone",
+		"--depth",
+		"1",
+		"https://github.com/wbthomason/packer.nvim",
+		install_path,
+	})
+	vim.cmd [[packadd packer.nvim]]
+end
+
 local cargo_bin = vim.fn.expand("~/.cargo/bin")
 if vim.env.PATH and not vim.env.PATH:find(cargo_bin, 1, true) then
 	vim.env.PATH = cargo_bin .. ":" .. vim.env.PATH
@@ -58,9 +75,15 @@ return require('packer').startup(function(use)
 			"nvim-tree/nvim-web-devicons",
 		},
 		run = ":PympleBuild",
-		config = function()
-			require("pymple").setup()
-		end,
 	}
 
-end)
+	if bootstrap then
+		require('packer').sync()
+	end
+end, {
+	git = {
+		clone_timeout = 600,
+	},
+	auto_clean = true,
+	compile_on_sync = true,
+})

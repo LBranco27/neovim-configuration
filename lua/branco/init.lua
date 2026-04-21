@@ -6,7 +6,9 @@ local ui = require("harpoon.ui")
 vim.opt.wrap = false
 vim.opt.guicursor = ""
 
-vim.opt.undodir = os.getenv("HOME") .. "/.vim/undodir"
+local undo_dir = vim.fn.stdpath("state") .. "/undo"
+vim.opt.undodir = undo_dir
+vim.fn.mkdir(undo_dir, "p")
 vim.opt.undofile = true
 
 vim.opt.termguicolors = true
@@ -49,6 +51,9 @@ vim.keymap.set("", "<leader>p", '"+p')
 vim.keymap.set("", "<leader>P", '"+P')
 vim.keymap.set("t", "<C-t>", vim.cmd.ToggleTerm)
 vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float)
+pcall(function()
+  require('pymple').setup()
+end)
 vim.api.nvim_create_user_command('PympleUpdateImportsPrompt', function()
   vim.ui.input({ prompt = 'Old path: ', completion = 'file' }, function(source)
     if not source or source == '' then
