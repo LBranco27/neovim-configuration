@@ -363,8 +363,45 @@ if cmp_nvim_lsp_ok then
   capabilities = cmp_nvim_lsp.default_capabilities(capabilities)
 end
 
+local function go_to_definition_dedup()
+  vim.lsp.buf.definition({
+    on_list = function(opts)
+      local seen = {}
+      local items = {}
+
+      for _, item in ipairs(opts.items) do
+        local key = table.concat({
+          item.filename or '',
+          tostring(item.lnum or 0),
+          tostring(item.col or 0),
+          item.text or '',
+        }, ':')
+
+        if not seen[key] then
+          seen[key] = true
+          table.insert(items, item)
+        end
+      end
+
+      if #items == 1 then
+        local entry = items[1]
+        vim.cmd.edit(vim.fn.fnameescape(entry.filename))
+        vim.api.nvim_win_set_cursor(0, { entry.lnum, math.max((entry.col or 1) - 1, 0) })
+        return
+      end
+
+      vim.fn.setloclist(0, {}, ' ', {
+        title = opts.title,
+        items = items,
+        context = opts.context,
+      })
+      vim.cmd.lopen()
+    end,
+  })
+end
+
 local function on_attach(client, bufnr)
-  vim.keymap.set('n', 'gd', vim.lsp.buf.definition, { buffer = bufnr, desc = 'Go to definition' })
+  vim.keymap.set('n', 'gd', go_to_definition_dedup, { buffer = bufnr, desc = 'Go to definition' })
   vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, { buffer = bufnr, desc = 'Go to declaration' })
   vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, { buffer = bufnr, desc = 'Go to implementation' })
   vim.keymap.set('n', '<leader>gr', vim.lsp.buf.references, { buffer = bufnr, desc = 'Find references' })
