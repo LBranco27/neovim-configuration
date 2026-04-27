@@ -58,6 +58,51 @@ vim.keymap.set("", "<leader>y", '"+y')
 vim.keymap.set("", "<leader>p", '"+p')
 vim.keymap.set("", "<leader>P", '"+P')
 vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float)
+
+local function next_unstaged_file()
+  local root = vim.fs.root(0, { '.git' })
+  if not root then
+    vim.notify('No git repo found', vim.log.levels.WARN)
+    return
+  end
+
+  local unstaged = vim.fn.systemlist({
+    'git',
+    '-C',
+    root,
+    'diff',
+    '--name-only',
+    '--diff-filter=ACMRTUXB',
+    '--',
+  })
+  vim.list_extend(unstaged, vim.fn.systemlist({
+    'git',
+    '-C',
+    root,
+    'ls-files',
+    '--others',
+    '--exclude-standard',
+  }))
+
+  if #unstaged == 0 then
+    vim.notify('No unstaged files', vim.log.levels.INFO)
+    return
+  end
+
+  local current = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(0), ':p')
+  local start
+  for i, file in ipairs(unstaged) do
+    if current == vim.fs.joinpath(root, file) then
+      start = i
+      break
+    end
+  end
+
+  local next_file = unstaged[(start or 0) % #unstaged + 1]
+  vim.cmd.edit(vim.fn.fnameescape(root .. '/' .. next_file))
+end
+
+vim.keymap.set('n', '<leader>gn', next_unstaged_file, { desc = 'Next unstaged file' })
 pcall(function()
   require('pymple').setup()
 end)
@@ -312,7 +357,6 @@ gitsigns.setup {
     -- Actions
     map('n', '<leader>hs', gitsigns.stage_hunk)
     map('n', '<leader>hr', gitsigns.reset_hunk)
-    map('n', '<leader>hu', gitsigns.undo_stage_hunk)
 
     map('v', '<leader>hs', function()
       gitsigns.stage_hunk({ vim.fn.line('.'), vim.fn.line('v') })
