@@ -2,7 +2,7 @@ return {
 	{ "nvim-lua/plenary.nvim" },
 	{ "MunifTanjim/nui.nvim" },
 	{ "stevearc/dressing.nvim" },
-	{ "dense-analysis/ale" },
+	
 	{ "hrsh7th/nvim-cmp" },
 	{ "hrsh7th/cmp-nvim-lsp" },
 	{ "hrsh7th/cmp-buffer" },
