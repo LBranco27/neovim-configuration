@@ -2,15 +2,11 @@ return {
 	{ "williamboman/mason.nvim", build = ":MasonUpdate" },
 	{ "neovim/nvim-lspconfig" },
 	{ "mfussenegger/nvim-dap" },
+	{ "mfussenegger/nvim-dap-python", ft = "python" },
+	{ "rcarriga/nvim-dap-ui", dependencies = { "mfussenegger/nvim-dap", "nvim-neotest/nvim-nio" } },
 	{ "mfussenegger/nvim-jdtls" },
-	{
-		"alexpasmantier/pymple.nvim",
-		dependencies = {
-			"nvim-lua/plenary.nvim",
-			"MunifTanjim/nui.nvim",
-			"stevearc/dressing.nvim",
-			"nvim-tree/nvim-web-devicons",
-		},
-		build = ":PympleBuild",
-	},
+	{ "mfussenegger/nvim-lint" },
+	{ "stevearc/conform.nvim" },
+	{ "linux-cultist/venv-selector.nvim", ft = "python" },
+	{ "nvim-neotest/neotest", dependencies = { "nvim-neotest/neotest-python" } },
 }

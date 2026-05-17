@@ -7,6 +7,29 @@ return {
 	{ "nvim-telescope/telescope.nvim", dependencies = { "nvim-lua/plenary.nvim" } },
 	{ "nvim-treesitter/nvim-treesitter", build = ":TSUpdate" },
 	{ "akinsho/toggleterm.nvim", version = "*" },
-	{ "kkoomen/vim-doge" },
+	{ "kkoomen/vim-doge", build = ":DogGenerate" },
 	{ "aklt/plantuml-syntax" },
+	{
+		"akinsho/git-conflict.nvim",
+		version = "*",
+		config = function()
+			require("git-conflict").setup({
+				default_mappings = {
+					ours = "co",
+					theirs = "ct",
+					both = "cb",
+					none = "c0",
+					next = "]x",
+					prev = "[x",
+				},
+				default_commands = true,
+				disable_diagnostics = true,
+				list_opener = "copen",
+				highlights = {
+					incoming = "DiffAdd",
+					current = "DiffText",
+				},
+			})
+		end,
+	},
 }

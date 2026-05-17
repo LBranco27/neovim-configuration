@@ -1,515 +1,77 @@
-local telescope_ok, builtin = pcall(require, 'telescope.builtin')
-local harpoon_mark_ok, mark = pcall(require, 'harpoon.mark')
-local harpoon_ui_ok, ui = pcall(require, 'harpoon.ui')
+require("branco.options")
+require("branco.treesitter")
+require("branco.telescope")
+require("branco.harpoon")
+require("branco.toggleterm")
+require("branco.keymaps")
+require("branco.lsp")
+require("branco.cmp")
+require("branco.dap")
+require("branco.git")
 
--- sets
-vim.opt.wrap = false
-vim.opt.guicursor = ""
-
-local undo_dir = vim.fn.stdpath("state") .. "/undo"
-vim.opt.undodir = undo_dir
-vim.fn.mkdir(undo_dir, "p")
-vim.opt.undofile = true
-
-vim.opt.termguicolors = true
-
--- leader
-vim.g.mapleader = ' '
-
--- toggleterm
-local toggleterm_ok, toggleterm = pcall(require, 'toggleterm')
-if toggleterm_ok then
-  toggleterm.setup()
-  vim.keymap.set('n', '<C-t>', ":ToggleTerm direction=float<CR>", {})
-  vim.keymap.set("t", "<C-t>", vim.cmd.ToggleTerm)
-end
-
--- telescope
-if telescope_ok then
-  vim.keymap.set('n', '<leader>ff', builtin.find_files, {})
-  vim.keymap.set('n', '<leader>fg', builtin.live_grep, {})
-  vim.keymap.set('n', '<leader>fb', builtin.buffers, {})
-  vim.keymap.set('n', '<leader>fh', builtin.help_tags, {})
-  vim.keymap.set('n', '<leader>ft', builtin.git_files, {})
-end
-
-
-
--- harpoon
-local harpoon_ok, harpoon = pcall(require, 'harpoon')
-if harpoon_ok and harpoon_mark_ok and harpoon_ui_ok then
-  harpoon.setup({
-    menu = {
-      width = vim.api.nvim_win_get_width(0) - 4,
-    }
-  })
-
-  vim.keymap.set("n", "<leader>a", mark.add_file)
-  vim.keymap.set("n", "<C-e>", ui.toggle_quick_menu)
-  vim.keymap.set("n", "<C-h>", function() ui.nav_file(1) end)
-  vim.keymap.set("n", "<C-j>", function() ui.nav_file(2) end)
-  vim.keymap.set("n", "<C-k>", function() ui.nav_file(3) end)
-  vim.keymap.set("n", "<C-l>", function() ui.nav_file(4) end)
-end
-
--- my keymaps
-vim.keymap.set("n", "<leader>o", "o<Esc>")
-vim.keymap.set("", "<leader>y", '"+y')
-vim.keymap.set("", "<leader>p", '"+p')
-vim.keymap.set("", "<leader>P", '"+P')
-vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float)
-
-local function next_unstaged_file()
-  local root = vim.fs.root(0, { '.git' })
-  if not root then
-    vim.notify('No git repo found', vim.log.levels.WARN)
-    return
-  end
-
-  local unstaged = vim.fn.systemlist({
-    'git',
-    '-C',
-    root,
-    'diff',
-    '--name-only',
-    '--diff-filter=ACMRTUXB',
-    '--',
-  })
-  vim.list_extend(unstaged, vim.fn.systemlist({
-    'git',
-    '-C',
-    root,
-    'ls-files',
-    '--others',
-    '--exclude-standard',
-  }))
-
-  if #unstaged == 0 then
-    vim.notify('No unstaged files', vim.log.levels.INFO)
-    return
-  end
-
-  local current = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(0), ':p')
-  local start
-  for i, file in ipairs(unstaged) do
-    if current == vim.fs.joinpath(root, file) then
-      start = i
-      break
-    end
-  end
-
-  local next_file = unstaged[(start or 0) % #unstaged + 1]
-  vim.cmd.edit(vim.fn.fnameescape(root .. '/' .. next_file))
-end
-
-vim.keymap.set('n', '<leader>gn', next_unstaged_file, { desc = 'Next unstaged file' })
+-- Mason
 pcall(function()
-  require('pymple').setup()
+	require("mason").setup()
 end)
-vim.api.nvim_create_user_command('PympleUpdateImportsPrompt', function()
-  vim.ui.input({ prompt = 'Old path: ', completion = 'file' }, function(source)
-    if not source or source == '' then
-      return
-    end
-
-    vim.ui.input({ prompt = 'New path: ', completion = 'file' }, function(destination)
-      if not destination or destination == '' then
-        return
-      end
-
-      require('pymple.api').update_imports(
-        vim.fn.fnamemodify(source, ':p'),
-        vim.fn.fnamemodify(destination, ':p'),
-        require('pymple.config').user_config.update_imports
-      )
-    end)
-  end)
-end, { desc = 'Prompt for Pymple import update paths' })
-
-vim.api.nvim_create_user_command('UpdateAll', function()
-  local strict_commands = {
-    'Lazy sync',
-    'Lazy update',
-    'Lazy clean',
-    'MasonUpdate',
-    'TSUpdate',
-  }
-
-  for _, command in ipairs(strict_commands) do
-    local ok, err = pcall(vim.cmd, command)
-    if not ok then
-      vim.notify('UpdateAll: failed on `' .. command .. '`\n' .. tostring(err), vim.log.levels.WARN)
-      return
-    end
-  end
-
-  local sed_ok = vim.fn.executable('sed') == 1 or vim.fn.executable('gsed') == 1
-  local fd_ok = vim.fn.executable('fd') == 1
-  local gg_ok = vim.fn.executable('gg') == 1
-
-  if not (sed_ok and fd_ok and gg_ok) then
-    local ok, err = pcall(vim.cmd, 'PympleBuild')
-    if not ok then
-      vim.notify('UpdateAll: optional step `PympleBuild` failed\n' .. tostring(err), vim.log.levels.WARN)
-    end
-  end
-
-  vim.notify('UpdateAll: finished plugin/tool updates', vim.log.levels.INFO)
-end, { desc = 'Update plugins, tools, parsers, and pymple binaries' })
--- wraps " and ' when visual 
-vim.api.nvim_set_keymap('x', '"', 'c"<C-r>""<Esc>', { noremap = true, silent = true })
-vim.api.nvim_set_keymap('x', "'", "c'<C-r>\"'<Esc>", { noremap = true, silent = true })
-
-vim.keymap.set('n', '<leader>ww', function()
-  vim.wo.wrap = not vim.wo.wrap
-end, { desc = "Toggle word wrap" })
-
--- undotree
-vim.keymap.set("n", "<leader>u", vim.cmd.UndotreeToggle)
-
--- vimfugitive
-vim.keymap.set("n", "<leader>g", ":tab Git<CR>", { noremap = true, silent = true })
-
--- treesitter with proper highlight links to gruvbox
-local parser_install_dir = vim.fn.stdpath('data') .. '/site'
-
-local ts = require('nvim-treesitter')
-ts.setup {
-	install_dir = parser_install_dir,
-}
-
-vim.api.nvim_create_autocmd("FileType", {
-	pattern = "*",
-	callback = function(args)
-		pcall(vim.treesitter.start, args.buf)
-	end,
-})
-
-vim.api.nvim_create_autocmd("FileType", {
-	pattern = { "gd", "gdscript3" },
-	callback = function(args)
-		vim.bo[args.buf].filetype = "gdscript"
-	end,
-})
-
--- DAP godot
-local dap_ok, dap = pcall(require, 'dap')
-if dap_ok then
-  dap.adapters.godot = {
-    type = "server",
-    host = '127.0.0.1',
-    port = 6006,
-  }
-  dap.configurations.gdscript = {
-    {
-      type = "godot",
-      request = "launch",
-      name = "Launch scene",
-      project = "${workspaceFolder}",
-      launch_scene = true,
-    }
-  }
-end
-
--- LSP
-local mason_ok, mason = pcall(require, 'mason')
-if mason_ok then
-  mason.setup()
-end
-
--- nvim-cmp setup
-local cmp_ok, cmp = pcall(require, 'cmp')
-local luasnip_ok, luasnip = pcall(require, 'luasnip')
-local lspkind_ok, lspkind = pcall(require, 'lspkind')
-
-if cmp_ok and luasnip_ok and lspkind_ok then
-  luasnip.config.setup {}
-
-  -- mjlbach/starter.nvim (just works)
-  cmp.setup {
-    snippet = {
-      expand = function(args)
-        luasnip.lsp_expand(args.body)
-      end,
-    },
-    formatting = {
-      format = lspkind.cmp_format({
-        mode = 'symbol_text',
-        maxwidth = 50,
-      }),
-    },
-    mapping = cmp.mapping.preset.insert {
-      ['<C-d>'] = cmp.mapping.scroll_docs(-4),
-      ['<C-f>'] = cmp.mapping.scroll_docs(4),
-      ['<C-r>'] = cmp.mapping.complete {},
-      ['<C-y>'] = cmp.mapping.confirm {
-        behavior = cmp.ConfirmBehavior.Insert,
-       select = true,
-      },
-      ['<C-Tab>'] = cmp.mapping(function(fallback)
-        if cmp.visible() then
-          cmp.select_next_item()
-        elseif luasnip.expand_or_jumpable() then
-          luasnip.expand_or_jump()
-        else
-          fallback()
-        end
-      end, { 'i', 's' }),
-      ['<S-Tab>'] = cmp.mapping(function(fallback)
-        if cmp.visible() then
-          cmp.select_prev_item()
-        elseif luasnip.jumpable(-1) then
-          luasnip.jump(-1)
-        else
-          fallback()
-        end
-      end, { 'i', 's' }),
-    },
-    sources = cmp.config.sources({
-      { name = 'nvim_lsp', priority = 1000 },
-      { name = 'luasnip', priority = 750 },
-      { name = 'buffer', priority = 500 },
-      { name = 'path', priority = 250 },
-      { name = 'cmdline', priority = 100 },
-      { name = 'nvim_lua' },
-    }),
-  }
-end
-
-
--- GITSIGNS
-local gitsigns_ok, gitsigns = pcall(require, 'gitsigns')
-if gitsigns_ok then
-gitsigns.setup {
-  signs = {
-    add          = { text = '┃' },
-    change       = { text = '┃' },
-    delete       = { text = '_' },
-    topdelete    = { text = '‾' },
-    changedelete = { text = '~' },
-    untracked    = { text = '┆' },
-  },
-  signs_staged = {
-    add          = { text = '┃' },
-    change       = { text = '┃' },
-    delete       = { text = '_' },
-    topdelete    = { text = '‾' },
-    changedelete = { text = '~' },
-    untracked    = { text = '┆' },
-  },
-  signs_staged_enable = true,
-  signcolumn = true,  -- Toggle with `:Gitsigns toggle_signs`
-  numhl      = false, -- Toggle with `:Gitsigns toggle_numhl`
-  linehl     = false, -- Toggle with `:Gitsigns toggle_linehl`
-  word_diff  = false, -- Toggle with `:Gitsigns toggle_word_diff`
-  watch_gitdir = {
-    follow_files = true
-  },
-  auto_attach = true,
-  attach_to_untracked = false,
-  current_line_blame = false, -- Toggle with `:Gitsigns toggle_current_line_blame`
-  current_line_blame_opts = {
-    virt_text = true,
-    virt_text_pos = 'eol', -- 'eol' | 'overlay' | 'right_align'
-    delay = 1000,
-    ignore_whitespace = false,
-    virt_text_priority = 100,
-    use_focus = true,
-  },
-  current_line_blame_formatter = '<author>, <author_time:%R> - <summary>',
-  sign_priority = 6,
-  update_debounce = 100,
-  status_formatter = nil, -- Use default
-  max_file_length = 40000, -- Disable if file is longer than this (in lines)
-  preview_config = {
-    -- Options passed to nvim_open_win
-    style = 'minimal',
-    relative = 'cursor',
-    row = 0,
-    col = 1
-  },
-  on_attach = function(bufnr)
-    local function map(mode, l, r, opts)
-      opts = opts or {}
-      opts.buffer = bufnr
-      vim.keymap.set(mode, l, r, opts)
-    end
-
-    -- Navigation
-    map('n', ']c', function()
-      if vim.wo.diff then
-	vim.cmd.normal({']c', bang = true})
-      else
-	gitsigns.nav_hunk('next')
-      end
-      vim.cmd.normal({ 'zz', bang = true }) -- center screen
-    end)
-
-    map('n', '[c', function()
-      if vim.wo.diff then
-	vim.cmd.normal({'[c', bang = true})
-      else
-	gitsigns.nav_hunk('prev')
-      end
-      vim.cmd.normal({ 'zz', bang = true }) -- center screen
-    end)
-
-    -- Actions
-    map('n', '<leader>hs', gitsigns.stage_hunk)
-    map('n', '<leader>hr', gitsigns.reset_hunk)
-
-    map('v', '<leader>hs', function()
-      gitsigns.stage_hunk({ vim.fn.line('.'), vim.fn.line('v') })
-    end)
-
-    map('v', '<leader>hr', function()
-      gitsigns.reset_hunk({ vim.fn.line('.'), vim.fn.line('v') })
-    end)
-
-    map('n', '<leader>hS', gitsigns.stage_buffer)
-    map('n', '<leader>hR', gitsigns.reset_buffer)
-    map('n', '<leader>hp', gitsigns.preview_hunk)
-    map('n', '<leader>hi', gitsigns.preview_hunk_inline)
-
-    map('n', '<leader>hb', function()
-      gitsigns.blame_line({ full = true })
-    end)
-
-    map('n', '<leader>hd', gitsigns.diffthis)
-
-    map('n', '<leader>hD', function()
-      gitsigns.diffthis('~')
-    end)
-
-    map('n', '<leader>hQ', function() gitsigns.setqflist('all') end)
-    map('n', '<leader>hq', gitsigns.setqflist)
-
-    -- Toggles
-    map('n', '<leader>tb', gitsigns.toggle_current_line_blame)
-    map('n', '<leader>tw', gitsigns.toggle_word_diff)
-
-    -- Text object
-    map({'o', 'x'}, 'ih', gitsigns.select_hunk)
-  end
-}
-end
 
 -- vim-doge
--- Configure vim-doge to generate Python docstrings in a specific format
-vim.g.doge_doc_standard_python = 'google'
+vim.g.doge_doc_standard_python = "google"
 vim.g.doge_enable = 1
 
+vim.api.nvim_create_user_command("UpdateAll", function()
+	for _, command in ipairs({ "Lazy sync", "MasonUpdate", "TSUpdate" }) do
+		local ok, err = pcall(vim.cmd, command)
+		if not ok then
+			vim.notify("UpdateAll: failed on `" .. command .. "`\n" .. tostring(err), vim.log.levels.WARN)
+			return
+		end
+	end
+	vim.notify("UpdateAll: finished", vim.log.levels.INFO)
+end, { desc = "Update plugins, tools, and parsers" })
 
--- LSPCONFIG
-local capabilities = vim.lsp.protocol.make_client_capabilities()
-local cmp_nvim_lsp_ok, cmp_nvim_lsp = pcall(require, 'cmp_nvim_lsp')
-if cmp_nvim_lsp_ok then
-  capabilities = cmp_nvim_lsp.default_capabilities(capabilities)
-end
+-- nvim-lint
+pcall(function()
+	require("lint").linters_by_ft = { python = { "ruff" } }
+	vim.api.nvim_create_autocmd({ "BufWritePost", "BufReadPost", "InsertLeave" }, {
+		callback = function()
+			require("lint").try_lint()
+		end,
+	})
+end)
 
-local function go_to_definition_dedup()
-  vim.lsp.buf.definition({
-    on_list = function(opts)
-      local seen = {}
-      local items = {}
+-- Conform (format on save)
+pcall(function()
+	require("conform").setup({
+		formatters_by_ft = {
+			python = { "ruff_format" },
+			lua = { "stylua" },
+		},
+		format_on_save = { timeout_ms = 500, lsp_format = "fallback" },
+	})
+end)
 
-      for _, item in ipairs(opts.items) do
-        local key = table.concat({
-          item.filename or '',
-          tostring(item.lnum or 0),
-          tostring(item.col or 0),
-          item.text or '',
-        }, ':')
+-- venv-selector
+pcall(function()
+	require("venv-selector").setup()
+end)
 
-        if not seen[key] then
-          seen[key] = true
-          table.insert(items, item)
-        end
-      end
-
-      if #items == 1 then
-        local entry = items[1]
-        vim.cmd.edit(vim.fn.fnameescape(entry.filename))
-        vim.api.nvim_win_set_cursor(0, { entry.lnum, math.max((entry.col or 1) - 1, 0) })
-        return
-      end
-
-      vim.fn.setloclist(0, {}, ' ', {
-        title = opts.title,
-        items = items,
-        context = opts.context,
-      })
-      vim.cmd.lopen()
-    end,
-  })
-end
-
-local function on_attach(client, bufnr)
-  vim.keymap.set('n', 'gd', go_to_definition_dedup, { buffer = bufnr, desc = 'Go to definition' })
-  vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, { buffer = bufnr, desc = 'Go to declaration' })
-  vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, { buffer = bufnr, desc = 'Go to implementation' })
-  vim.keymap.set('n', '<leader>gr', vim.lsp.buf.references, { buffer = bufnr, desc = 'Find references' })
-  vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, { buffer = bufnr, desc = 'Code Actions' })
-  vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, { buffer = bufnr, desc = 'Rename symbol' })
-  if client.server_capabilities.inlayHintProvider then
-    vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
-  end
-end
-
--- Diagnostic configuration
-vim.diagnostic.config({
-  virtual_text = { prefix = '●', source = 'if_many' },
-  signs = true,
-  update_in_insert = false,
-  float = { border = 'rounded', source = 'always' },
-})
-
--- Configure LSP servers
-vim.lsp.config('pyright', {
-  capabilities = capabilities,
-  on_attach = on_attach,
-  settings = {
-    python = {
-      analysis = {
-        autoImportCompletions = true,
-        typeCheckingMode = 'basic',
-      },
-    },
-  },
-})
-
-vim.lsp.config('lua_ls', {
-  capabilities = capabilities,
-  on_attach = on_attach,
-  settings = {
-    Lua = {
-      diagnostics = {
-        globals = { 'vim' },
-      },
-      workspace = {
-        checkThirdParty = false,
-        library = vim.api.nvim_get_runtime_file('', true),
-      },
-    },
-  },
-})
-vim.lsp.config('gdscript', {
-  capabilities = capabilities,
-  on_attach = on_attach,
-  filetypes = { 'gdscript' },
-})
-vim.lsp.config('tsserver', {
-  capabilities = capabilities,
-  on_attach = on_attach,
-})
-vim.lsp.config('rust_analyzer', {
-  capabilities = capabilities,
-  on_attach = on_attach,
-})
-
--- Enable LSP servers
-vim.lsp.enable('pyright')
-vim.lsp.enable('lua_ls')
-vim.lsp.enable('gdscript')
-vim.lsp.enable('tsserver')
-vim.lsp.enable('rust_analyzer')
+-- Neotest
+pcall(function()
+	require("neotest").setup({
+		adapters = {
+			require("neotest-python")({
+				runner = "pytest",
+			}),
+		},
+	})
+	local neotest = require("neotest")
+	vim.keymap.set("n", "<leader>tn", function()
+		neotest.run.run()
+	end, { desc = "Run nearest test" })
+	vim.keymap.set("n", "<leader>tf", function()
+		neotest.run.run(vim.fn.expand("%"))
+	end, { desc = "Run file tests" })
+	vim.keymap.set("n", "<leader>ts", function()
+		neotest.summary.toggle()
+	end, { desc = "Toggle test summary" })
+end)

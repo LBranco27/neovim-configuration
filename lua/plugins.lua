@@ -13,15 +13,6 @@ end
 
 vim.opt.rtp:prepend(lazypath)
 
-local cargo_bin = vim.fn.expand("~/.cargo/bin")
-if vim.env.PATH and not vim.env.PATH:find(cargo_bin, 1, true) then
-	vim.env.PATH = cargo_bin .. ":" .. vim.env.PATH
-end
-
-vim.g.OmniSharp_server_use_mono = 1
-vim.g["prettier#config#tab_width"] = 8
-vim.g["prettier#config#use_tabs"] = "true"
-
 require("lazy").setup({
 	{ import = "plugins.specs.ui" },
 	{ import = "plugins.specs.editor" },
@@ -42,7 +33,7 @@ require("lazy").setup({
 	},
 	performance = {
 		cache = {
-			enabled = false,
+			enabled = true,
 		},
 	},
 })
