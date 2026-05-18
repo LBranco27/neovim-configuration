@@ -3,6 +3,10 @@ if not dap_ok then
 	return
 end
 
+pcall(function()
+	require("dap-virtual-text").setup({ commented = true })
+end)
+
 dap.adapters.godot = {
 	type = "server",
 	host = "127.0.0.1",

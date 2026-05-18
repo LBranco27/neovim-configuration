@@ -23,6 +23,12 @@ vim.diagnostic.config({
 	float = { border = "rounded", source = "always" },
 })
 
+vim.lsp.config("ruff", {
+	on_attach = function(client, bufnr)
+		client.server_capabilities.completionProvider = nil
+	end,
+})
+
 vim.lsp.config("pyright", {
 	capabilities = capabilities,
 	on_attach = on_attach,
@@ -61,6 +67,7 @@ vim.lsp.config("ts_ls", {
 	on_attach = on_attach,
 })
 
+vim.lsp.enable("ruff")
 vim.lsp.enable("pyright")
 vim.lsp.enable("lua_ls")
 vim.lsp.enable("gdscript")

@@ -31,12 +31,7 @@ end, { desc = "Update plugins, tools, and parsers" })
 
 -- nvim-lint
 pcall(function()
-	require("lint").linters_by_ft = { python = { "ruff" } }
-	vim.api.nvim_create_autocmd({ "BufWritePost", "BufReadPost", "InsertLeave" }, {
-		callback = function()
-			require("lint").try_lint()
-		end,
-	})
+	
 end)
 
 -- Conform (format on save)

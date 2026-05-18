@@ -6,6 +6,7 @@ return {
 	{ "tpope/vim-sleuth" },
 	{ "nvim-telescope/telescope.nvim", dependencies = { "nvim-lua/plenary.nvim" } },
 	{ "nvim-treesitter/nvim-treesitter", build = ":TSUpdate" },
+	{ "nvim-treesitter/nvim-treesitter-textobjects" },
 	{ "akinsho/toggleterm.nvim", version = "*" },
 	{ "kkoomen/vim-doge", build = ":DogGenerate" },
 	{ "aklt/plantuml-syntax" },
