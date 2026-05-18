@@ -1,4 +1,4 @@
-local ok, ts = pcall(require, "nvim-treesitter.configs")
+local ok, ts = pcall(require, "nvim-treesitter")
 if not ok then
 	return
 end
@@ -35,6 +35,13 @@ ts.setup({
 			goto_previous_end = { ["[F"] = "@function.outer", ["[C"] = "@class.outer" },
 		},
 	},
+})
+
+vim.api.nvim_create_autocmd("FileType", {
+	pattern = { "python", "lua", "bash", "json", "markdown", "regex", "vim" },
+	callback = function()
+		vim.treesitter.start()
+	end,
 })
 
 vim.api.nvim_create_autocmd("FileType", {
