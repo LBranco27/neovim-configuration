@@ -24,7 +24,7 @@ return {
 					prev = "[x",
 				},
 				default_commands = true,
-				disable_diagnostics = true,
+				disable_diagnostics = false,
 				list_opener = "copen",
 				highlights = {
 					incoming = "DiffAdd",

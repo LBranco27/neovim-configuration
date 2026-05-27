@@ -102,6 +102,17 @@ if gitsigns_ok then
 	})
 end
 
+-- Global ]c / [c always center screen (buffer-local gitsigns ones override these)
+vim.keymap.set("n", "]c", function()
+	vim.cmd.normal({ "]c", bang = true })
+	vim.cmd.normal({ "zz", bang = true })
+end, { desc = "Next diff/hunk and center" })
+
+vim.keymap.set("n", "[c", function()
+	vim.cmd.normal({ "[c", bang = true })
+	vim.cmd.normal({ "zz", bang = true })
+end, { desc = "Prev diff/hunk and center" })
+
 -- Suppress diagnostics when buffer has git conflict markers
 local function buf_has_conflicts(bufnr)
 	for _, line in ipairs(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)) do
