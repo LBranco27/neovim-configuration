@@ -156,7 +156,7 @@ vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter" }, {
 		if git_head_cache[root] and git_head_cache[root] ~= head then
 			vim.cmd("checktime")
 			for _, client in ipairs(vim.lsp.get_clients()) do
-				pcall(vim.lsp.stop_client, client.id)
+				pcall(vim.lsp.stop_client, client.id, true, true)
 			end
 			vim.notify("Git HEAD changed — LSP restarted", vim.log.levels.INFO)
 		end
