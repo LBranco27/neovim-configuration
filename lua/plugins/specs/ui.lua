@@ -41,7 +41,15 @@ return {
 					lualine_c = { "filename" },
 					lualine_x = { "encoding", "fileformat", "filesize" },
 					lualine_y = { "progress" },
-					lualine_z = { "location" },
+					lualine_z = {
+						{
+							function()
+								local ok, opencode = pcall(require, "opencode")
+								return ok and opencode.statusline() or ""
+							end,
+						},
+						"location",
+					},
 				},
 				inactive_sections = {
 					lualine_a = { "filename" },
@@ -53,6 +61,17 @@ return {
 				},
 				tabline = {},
 				extensions = {},
+			})
+		end,
+	},
+	{
+		"folke/snacks.nvim",
+		priority = 1000,
+		lazy = false,
+		config = function()
+			require("snacks").setup({
+				input = { enabled = true },
+				terminal = { enabled = true },
 			})
 		end,
 	},
