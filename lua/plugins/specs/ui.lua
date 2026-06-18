@@ -6,7 +6,20 @@ return {
 		version = "*",
 		dependencies = { "nvim-tree/nvim-web-devicons" },
 		config = function()
+			local function on_attach(bufnr)
+				local api = require("nvim-tree.api")
+				local function opts(desc)
+					return { desc = "nvim-tree: " .. desc, buffer = bufnr, noremap = true, silent = true, nowait = true }
+				end
+				-- load all default keymaps
+				api.map.on_attach.default(bufnr)
+				-- drop nvim-tree's <C-t> so the global toggleterm <C-t> works in the tree
+				pcall(vim.keymap.del, "n", "<C-t>", { buffer = bufnr })
+				-- remap nvim-tree's "open in new tab" to <C-o>
+				vim.keymap.set("n", "<C-o>", api.node.open.tab, opts("Open: In New Tab"))
+			end
 			require("nvim-tree").setup({
+				on_attach = on_attach,
 				view = { width = 35 },
 				renderer = { group_empty = true },
 				filters = { dotfiles = false },
