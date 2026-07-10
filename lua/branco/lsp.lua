@@ -67,32 +67,6 @@ vim.lsp.config("ts_ls", {
 	on_attach = on_attach,
 })
 
-local lsp_client_configs = {}
-
-vim.api.nvim_create_autocmd("LspAttach", {
-	callback = function(args)
-		local client = vim.lsp.get_client_by_id(args.data.client_id)
-		if client then
-			lsp_client_configs[args.data.client_id] = client.config
-		end
-	end,
-})
-
-vim.api.nvim_create_autocmd("LspDetach", {
-	callback = function(args)
-		if args.data.reason ~= "exit" or vim.v.exiting then
-			return
-		end
-		local config = lsp_client_configs[args.data.client_id]
-		if config and vim.api.nvim_buf_is_valid(args.buf) then
-			vim.defer_fn(function()
-				vim.lsp.start(config, { bufnr = args.buf })
-			end, 500)
-			lsp_client_configs[args.data.client_id] = nil
-		end
-	end,
-})
-
 vim.lsp.enable("ruff")
 vim.lsp.enable("pyright")
 vim.lsp.enable("lua_ls")
