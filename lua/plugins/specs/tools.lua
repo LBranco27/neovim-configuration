@@ -1,7 +1,7 @@
 return {
 	{
 		"nickjvandyke/opencode.nvim",
-		version = "*",
+		branch = "main",
 		config = function()
 			local opencode_cmd = "opencode --port"
 			---@type snacks.terminal.Opts
