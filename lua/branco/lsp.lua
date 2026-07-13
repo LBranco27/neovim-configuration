@@ -73,3 +73,7 @@ vim.lsp.enable("lua_ls")
 vim.lsp.enable("gdscript")
 vim.lsp.enable("ts_ls")
 vim.lsp.enable("rust_analyzer")
+
+-- Disable servers registered by lspconfig that we don't want auto-started
+-- (tvm_ffi_navigator is for Apache TVM FFI, requires pip install ffi-navigator)
+vim.lsp.enable("tvm_ffi_navigator", false)
