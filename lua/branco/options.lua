@@ -1,5 +1,5 @@
 vim.opt.wrap = false
-vim.opt.guicursor = ""
+vim.opt.guicursor = "n-v-c:block,i-ci-ve:ver25,r-cr-o:hor20,a:blinkwait500-blinkoff500-blinkon500-Cursor"
 vim.opt.number = true
 vim.opt.relativenumber = true
 vim.opt.autoindent = true
