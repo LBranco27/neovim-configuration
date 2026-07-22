@@ -141,8 +141,70 @@ vim.api.nvim_create_autocmd("BufWritePost", {
 
 -- Restart LSP + reload buffers when git HEAD changes
 local git_head_cache = {}
+local restarting = false
+
+local function get_active_lsp_state()
+	local state = {}
+	for _, client in ipairs(vim.lsp.get_clients()) do
+		for bufnr, _ in pairs(client.attached_buffers) do
+			if vim.api.nvim_buf_is_valid(bufnr) and vim.api.nvim_buf_is_loaded(bufnr) then
+				state[bufnr] = state[bufnr] or {}
+				state[bufnr][client.name] = true
+			end
+		end
+	end
+	return state
+end
+
+local function stop_all_lsp_clients()
+	local clients = vim.lsp.get_clients({ _uninitialized = true })
+	if #clients == 0 then
+		return
+	end
+	for _, client in ipairs(clients) do
+		pcall(function()
+			client:stop(true)
+		end)
+	end
+	-- Wait for clients to exit instead of relying on a fixed delay.
+	local stopped = vim.wait(5000, function()
+		return #vim.lsp.get_clients({ _uninitialized = true }) == 0
+	end, 50)
+	if not stopped then
+		vim.notify("Some LSP clients did not stop in time", vim.log.levels.WARN)
+	end
+end
+
+local function restart_lsp_for_state(state)
+	for bufnr, names in pairs(state) do
+		if vim.api.nvim_buf_is_valid(bufnr) and vim.api.nvim_buf_is_loaded(bufnr) then
+			for name, _ in pairs(names) do
+				if vim.lsp.is_enabled(name) then
+					local config = vim.lsp.config[name]
+					if config then
+						local ok, err = pcall(vim.lsp.start, vim.deepcopy(config), {
+							bufnr = bufnr,
+							reuse_client = config.reuse_client,
+							_root_markers = config.root_markers,
+						})
+						if not ok then
+							vim.notify(
+								"Failed to restart LSP " .. name .. ": " .. tostring(err),
+								vim.log.levels.ERROR
+							)
+						end
+					end
+				end
+			end
+		end
+	end
+end
+
 vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter" }, {
 	callback = function()
+		if restarting then
+			return
+		end
 		local root = vim.fs.root(0, { ".git" })
 		if not root then
 			return
@@ -150,16 +212,19 @@ vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter" }, {
 		local ok, head = pcall(function()
 			return vim.trim(vim.fn.system("git -C " .. vim.fn.shellescape(root) .. " rev-parse HEAD"))
 		end)
-		if not ok or head == "" then
+		if not ok or head == "" or head:find("^fatal") then
 			return
 		end
-		if git_head_cache[root] and git_head_cache[root] ~= head then
+		local prev = git_head_cache[root]
+		git_head_cache[root] = head
+		if prev and prev ~= head then
+			restarting = true
+			local state = get_active_lsp_state()
+			stop_all_lsp_clients()
 			vim.cmd("checktime")
-			for _, client in ipairs(vim.lsp.get_clients()) do
-				pcall(vim.lsp.stop_client, client.id, true, true)
-			end
+			restart_lsp_for_state(state)
+			restarting = false
 			vim.notify("Git HEAD changed — LSP restarted", vim.log.levels.INFO)
 		end
-		git_head_cache[root] = head
 	end,
 })

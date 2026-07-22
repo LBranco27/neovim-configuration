@@ -1,8 +1,12 @@
 local capabilities = vim.lsp.protocol.make_client_capabilities()
 local cmp_nvim_lsp_ok, cmp_nvim_lsp = pcall(require, "cmp_nvim_lsp")
 if cmp_nvim_lsp_ok then
-	capabilities = cmp_nvim_lsp.default_capabilities(capabilities)
+	-- cmp-nvim-lsp returns only textDocument.completion; merge it with the base
+	-- capabilities so we keep general.positionEncodings and other defaults.
+	capabilities = vim.tbl_deep_extend("force", capabilities, cmp_nvim_lsp.default_capabilities())
 end
+capabilities.general = capabilities.general or {}
+capabilities.general.positionEncodings = { "utf-16" }
 
 local function on_attach(client, bufnr)
 	vim.keymap.set("n", "gd", vim.lsp.buf.definition, { buffer = bufnr, desc = "Go to definition" })
@@ -23,8 +27,16 @@ vim.diagnostic.config({
 	float = { border = "rounded", source = "always" },
 })
 
+-- Default capabilities for all LSP clients (including those configured elsewhere,
+-- e.g. GitLab Duo) so every client uses UTF-16 and avoids mixed encodings.
+vim.lsp.config("*", {
+	capabilities = capabilities,
+})
+
 vim.lsp.config("ruff", {
+	capabilities = capabilities,
 	on_attach = function(client, bufnr)
+		on_attach(client, bufnr)
 		client.server_capabilities.completionProvider = nil
 	end,
 })
@@ -67,6 +79,15 @@ vim.lsp.config("ts_ls", {
 	on_attach = on_attach,
 })
 
+vim.lsp.config("rust_analyzer", {
+	capabilities = capabilities,
+	on_attach = on_attach,
+})
+
+vim.lsp.config("gitlab_duo", {
+	capabilities = capabilities,
+})
+
 vim.lsp.enable("ruff")
 vim.lsp.enable("pyright")
 vim.lsp.enable("lua_ls")
@@ -74,6 +95,7 @@ vim.lsp.enable("gdscript")
 vim.lsp.enable("ts_ls")
 vim.lsp.enable("rust_analyzer")
 
--- Disable servers registered by lspconfig that we don't want auto-started
--- (tvm_ffi_navigator is for Apache TVM FFI, requires pip install ffi-navigator)
+-- Disable tvm_ffi_navigator (Apache TVM FFI): ffi-navigator is not installed.
+-- Override its filetypes so it can never auto-start, even if re-enabled later.
+vim.lsp.config("tvm_ffi_navigator", { filetypes = {} })
 vim.lsp.enable("tvm_ffi_navigator", false)
