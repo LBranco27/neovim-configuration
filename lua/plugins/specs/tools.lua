@@ -28,9 +28,11 @@ return {
 			vim.keymap.set({ "n", "x" }, "<C-x>", function()
 				require("opencode").select()
 			end, { desc = "Select opencode" })
-			vim.keymap.set({ "n", "t" }, "<C-.>", function()
+			local toggle_opencode = function()
 				require("snacks.terminal").toggle(opencode_cmd, snacks_terminal_opts)
-			end, { desc = "Toggle opencode" })
+			end
+			vim.keymap.set({ "n", "t" }, "<C-.>", toggle_opencode, { desc = "Toggle opencode" })
+			vim.keymap.set({ "n", "t" }, "<leader>.", toggle_opencode, { desc = "Toggle opencode" })
 			vim.keymap.set({ "n", "x" }, "go", function()
 				return require("opencode").operator("@this ")
 			end, { desc = "Add range to opencode", expr = true })
