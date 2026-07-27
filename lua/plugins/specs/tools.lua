@@ -32,7 +32,8 @@ return {
 				require("snacks.terminal").toggle(opencode_cmd, snacks_terminal_opts)
 			end
 			vim.keymap.set({ "n", "t" }, "<C-.>", toggle_opencode, { desc = "Toggle opencode" })
-			vim.keymap.set({ "n", "t" }, "<leader>.", toggle_opencode, { desc = "Toggle opencode" })
+			vim.keymap.set("n", "<leader>.", toggle_opencode, { desc = "Toggle opencode" })
+			vim.keymap.set({ "n", "t" }, "<F12>", toggle_opencode, { desc = "Toggle opencode" })
 			vim.keymap.set({ "n", "x" }, "go", function()
 				return require("opencode").operator("@this ")
 			end, { desc = "Add range to opencode", expr = true })
