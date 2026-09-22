@@ -100,6 +100,23 @@ if gitsigns_ok then
 			map({ "o", "x" }, "ih", gitsigns.select_hunk)
 		end,
 	})
+
+	-- Gitsigns does not attach to untracked files, so they get no buffer-local <leader>hs.
+	-- This fallback marks them intent-to-add; gitsigns then attaches and the file shows as
+	-- one hunk, staged hunk by hunk from there.
+	vim.keymap.set("n", "<leader>hs", function()
+		local file = vim.api.nvim_buf_get_name(0)
+		if file == "" then
+			return
+		end
+		local result = vim.system({ "git", "-C", vim.fs.dirname(file), "add", "-N", "--", file }):wait()
+		if result.code ~= 0 then
+			vim.notify("git add -N failed: " .. vim.trim(result.stderr), vim.log.levels.ERROR)
+			return
+		end
+		gitsigns.attach()
+		vim.notify("Intent-to-add: " .. vim.fn.fnamemodify(file, ":."))
+	end, { desc = "Intent-to-add untracked file" })
 end
 
 -- Global ]c / [c always center screen (buffer-local gitsigns ones override these)
