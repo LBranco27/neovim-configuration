@@ -35,13 +35,82 @@ local function get_terminal_state(bufnr)
 	}
 end
 
-local function get_claude_terminal_state()
+local function get_claude_terminal_bufnr()
 	local ok, terminal = pcall(require, "claudecode.terminal")
-	if not ok or type(terminal.get_active_terminal_bufnr) ~= "function" then
+	if ok and type(terminal.get_active_terminal_bufnr) == "function" then
+		return terminal.get_active_terminal_bufnr()
+	end
+end
+
+local function get_claude_terminal_state()
+	local bufnr = get_claude_terminal_bufnr()
+	if not bufnr then
 		return { open = false, focused = false }
 	end
 
-	return get_terminal_state(terminal.get_active_terminal_bufnr())
+	return get_terminal_state(bufnr)
+end
+
+---Footer of Claude's agent view, or nil when the chat is on screen.
+local function get_agent_view_footer(bufnr)
+	local banner, footer = false, nil
+	for _, line in ipairs(vim.api.nvim_buf_get_lines(bufnr, -61, -1, false)) do
+		-- Prefix short enough not to wrap in a narrow split.
+		banner = banner or line:find("conversation moved to the", 1, true) ~= nil
+		if line:match("%S") then
+			footer = line
+		end
+	end
+	if banner and footer and (footer:find("enter to return", 1, true) or footer:find("enter to create", 1, true)) then
+		return footer
+	end
+end
+
+---Leaves Claude's agent view, then calls on_chat.
+---Esc is sent only while the agent view is on screen: in the chat it would interrupt the model.
+local function return_to_claude_chat(bufnr, on_chat, tries)
+	tries = tries or 3
+	local footer = get_agent_view_footer(bufnr)
+	if not footer then
+		-- A chat reattached from the agent view drops input for a few hundred ms.
+		if tries < 3 then
+			return vim.defer_fn(on_chat, 500)
+		end
+		return on_chat()
+	end
+	if tries == 0 then
+		return vim.notify("Claude is still in the agent view; nothing sent", vim.log.levels.WARN)
+	end
+
+	-- Esc clears a typed prompt first, then returns to the chat; wait for each redraw.
+	vim.api.nvim_chan_send(vim.bo[bufnr].channel, "\27")
+	local waited_ms = 0
+	local function wait_redraw()
+		if get_agent_view_footer(bufnr) ~= footer or waited_ms >= 1000 then
+			return return_to_claude_chat(bufnr, on_chat, tries - 1)
+		end
+		waited_ms = waited_ms + 50
+		vim.defer_fn(wait_redraw, 50)
+	end
+	vim.defer_fn(wait_redraw, 50)
+end
+
+---Types an @mention of the cursor line or visual range into this Neovim's Claude terminal.
+---IDE @mentions miss a chat that has been through the agent view; typed text reaches whatever chat is shown.
+local function type_claude_mention(bufnr)
+	local first, last = vim.fn.line("v"), vim.fn.line(".")
+	first, last = math.min(first, last), math.max(first, last)
+	local claude_cwd = vim.uv.fs_readlink("/proc/" .. vim.fn.jobpid(vim.bo[bufnr].channel) .. "/cwd")
+	local file = vim.api.nvim_buf_get_name(0)
+	local path = claude_cwd and vim.fs.relpath(claude_cwd, file) or file
+	local range = first == last and ("#L" .. first) or ("#L%d-%d"):format(first, last)
+	if vim.fn.mode() ~= "n" then
+		vim.api.nvim_feedkeys(vim.keycode("<Esc>"), "nx", false)
+	end
+
+	return_to_claude_chat(bufnr, function()
+		require("claudecode.terminal").send_to_terminal(" @" .. path .. range .. " ", { submit = false })
+	end)
 end
 
 local function get_opencode_terminal_state()
@@ -91,7 +160,10 @@ local function route_to_agent()
 		if not get_claude_terminal_state().open then
 			agent_router_state.last_toggled_agent = "claude"
 		end
-		if vim.fn.mode() == "n" then
+		local bufnr = get_claude_terminal_bufnr()
+		if bufnr and vim.bo.buftype == "" and vim.api.nvim_buf_get_name(0) ~= "" then
+			type_claude_mention(bufnr)
+		elseif vim.fn.mode() == "n" then
 			execute_without_focus("ClaudeCodeAdd %")
 		else
 			execute_without_focus("ClaudeCodeSend")
