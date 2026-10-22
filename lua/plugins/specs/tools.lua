@@ -1,4 +1,4 @@
-local opencode_cmd = "opencode --port"
+local opencode_cmd = "opencode"
 local snacks_terminal_opts = {
 	win = {
 		position = "right",
@@ -234,18 +234,14 @@ return {
 			vim.keymap.set("n", "+", "<C-a>", { desc = "Increment", noremap = true })
 			vim.keymap.set("n", "-", "<C-x>", { desc = "Decrement", noremap = true })
 
-			-- Show terminal on prompt submit
+			-- Show terminal when OpenCode starts executing
 			vim.api.nvim_create_autocmd("User", {
-				pattern = "OpencodeEvent:tui.command.execute",
-				callback = function(args)
-					---@type opencode.server.Event
-					local event = args.data.event
-					if event.properties.command == "prompt.submit" then
-						agent_router_state.last_toggled_agent = "opencode"
-						local win = require("snacks.terminal").get(opencode_cmd, { create = false })
-						if win then
-							win:show()
-						end
+				pattern = "OpencodeEvent:session.execution.started",
+				callback = function()
+					agent_router_state.last_toggled_agent = "opencode"
+					local win = require("snacks.terminal").get(opencode_cmd, { create = false })
+					if win then
+						win:show()
 					end
 				end,
 			})
