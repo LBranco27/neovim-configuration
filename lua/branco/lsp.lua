@@ -7,6 +7,9 @@ if cmp_nvim_lsp_ok then
 end
 capabilities.general = capabilities.general or {}
 capabilities.general.positionEncodings = { "utf-16" }
+-- Tell servers about files changed outside Neovim (git stash, checkout). Off by
+-- default on Linux; with inotify-tools installed Neovim watches through inotifywait.
+capabilities.workspace.didChangeWatchedFiles.dynamicRegistration = true
 
 local function on_attach(client, bufnr)
 	vim.keymap.set("n", "gd", vim.lsp.buf.definition, { buffer = bufnr, desc = "Go to definition" })

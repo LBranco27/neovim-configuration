@@ -245,3 +245,13 @@ vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter" }, {
 		end
 	end,
 })
+
+-- Edits from the in-editor Claude terminal fire no FocusGained, so refresh on leaving it too.
+vim.api.nvim_create_autocmd({ "TermLeave", "BufEnter", "FocusGained" }, {
+	callback = function()
+		vim.cmd("silent! checktime")
+		pcall(function()
+			require("nvim-tree.api").tree.reload()
+		end)
+	end,
+})
